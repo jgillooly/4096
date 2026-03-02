@@ -43,19 +43,38 @@ GameManager.prototype.setup = function () {
     this.over        = previousState.over;
     this.won         = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
+    this.startTime  = Date.now() - (previousState.elapsedTime * 1000);
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
     this.over        = false;
     this.won         = false;
     this.keepPlaying = false;
+    this.startTime   = Date.now();
 
     // Add the initial tiles
     this.addStartTiles();
   }
 
+  if (this.timerInterval) {
+    clearInterval(this.timerInterval);
+  }
+  
+  var self = this;
+  this.timerInterval = setInterval(function () {
+    self.updateTimerDisplay();
+  }, 100);
+
   // Update the actuator
   this.actuate();
+};
+
+GameManager.prototype.getElapsedTime = function () {
+  return Math.floor((Date.now() - this.startTime) / 1000);
+};
+
+GameManager.prototype.updateTimerDisplay = function () {
+  this.actuator.updateTimer(this.getElapsedTime());
 };
 
 // Set up the initial tiles to start the game with
@@ -93,7 +112,8 @@ GameManager.prototype.actuate = function () {
     over:       this.over,
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
-    terminated: this.isGameTerminated()
+    terminated: this.isGameTerminated(),
+    elapsedTime: this.getElapsedTime()
   });
 
 };
@@ -105,7 +125,8 @@ GameManager.prototype.serialize = function () {
     score:       this.score,
     over:        this.over,
     won:         this.won,
-    keepPlaying: this.keepPlaying
+    keepPlaying: this.keepPlaying,
+    elapsedTime: this.getElapsedTime()
   };
 };
 
