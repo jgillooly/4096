@@ -471,6 +471,9 @@ hr {
 .game-explanation {
   margin-top: 50px;
 }
+.above-game{
+  @include clearfix;
+}
 
 @include smaller($mobile-threshold) {
   // Redefine variables for smaller screens
