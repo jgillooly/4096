@@ -5,6 +5,7 @@
   <title>2048</title>
 
   <link href="style/main.css" rel="stylesheet" type="text/css">
+  <a href="/before-game.html"></a>
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="meta/apple-touch-icon.png">
   <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x1096.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone 5+ -->
@@ -29,6 +30,7 @@
           <div class="timer-value">0:00</div>
       </div>
     </div>
+  </div>
 
     <div class="above-game">
       <p class="game-intro">Join the numbers and get to the <strong>2048 tile!</strong></p>
@@ -44,32 +46,7 @@
         </div>
       </div>
 
-      <div class="grid-container">
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-      </div>
+      <div class="grid-container"></div>
 
       <div class="tile-container">
 
@@ -92,6 +69,67 @@
   <script src="js/bind_polyfill.js"></script>
   <script src="js/classlist_polyfill.js"></script>
   <script src="js/animframe_polyfill.js"></script>
+  <script>
+    // Detect mode (from before-game.html links like index.html?mode=easy)
+    // and rebuild grid markup/size accordingly.
+    (function(){
+      var qs = (window.location.search||'').substring(1);
+      var size = 4;
+
+      // prefer query‑string if present
+      if (qs) {
+        var pairs = qs.split('&');
+        var params = {};
+        for (var i = 0; i < pairs.length; i++) {
+          var p = pairs[i].split('=');
+          params[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || '');
+        }
+
+        if (params.mode === 'easy') {
+          size = 3;
+        } else if (params.mode === 'hard') {
+          size = 5;
+        }
+      } else {
+        // fall back to localStorage (set by before-game click handler)
+        try {
+          var stored = localStorage.getItem('gridMode');
+          if (stored === 'easy') size = 3;
+          else if (stored === 'hard') size = 5;
+          // clear so subsequent reload uses default
+          localStorage.removeItem('gridMode');
+        } catch (e) { /* ignore storage errors */ }
+      }
+
+      window.initialGridSize = size;
+
+      // build the grid cells dynamically
+      var container = document.querySelector('.grid-container');
+      if (container) {
+        container.innerHTML = '';
+        for (var y = 0; y < size; y++) {
+          var row = document.createElement('div');
+          row.className = 'grid-row';
+          for (var x = 0; x < size; x++) {
+            var cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            row.appendChild(cell);
+          }
+          container.appendChild(row);
+        }
+
+        // adjust cell/tile dimensions so the board fills 500px
+        var totalPadding = 30; // 15px each side
+        var margin = 15; // margin-right on each cell except last
+        var cellSide = (500 - totalPadding - (size - 1) * margin) / size;
+        var style = document.createElement('style');
+        style.textContent =
+          '.grid-cell { width: ' + cellSide + 'px; height: ' + cellSide + 'px; }' +
+          '.tile, .tile .tile-inner { width: ' + (cellSide + 1) + 'px; height: ' + (cellSide + 1) + 'px; line-height: ' + (cellSide + 1) + 'px; }';
+        document.head.appendChild(style);
+      }
+    })();
+  </script>
   <script src="js/keyboard_input_manager.js"></script>
   <script src="js/html_actuator.js"></script>
   <script src="js/grid.js"></script>
