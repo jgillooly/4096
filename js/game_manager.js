@@ -48,6 +48,7 @@ GameManager.prototype.isGameTerminated = function () {
 // Set up the game
 GameManager.prototype.setup = function () {
   var previousState = this.storageManager.getGameState();
+  console.log("TIME MODE:", localStorage.getItem('timeOption')); // Debugging line to check time mode
 
   // Reload the game from a previous game if present
   if (previousState) {
