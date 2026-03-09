@@ -1,10 +1,10 @@
 function GameManager(size, InputManager, Actuator, StorageManager) {
-  this.size           = size; // Size of the grid
-  this.inputManager   = new InputManager;
+  this.size = size; // Size of the grid
+  this.inputManager = new InputManager;
   this.storageManager = new StorageManager;
-  this.actuator       = new Actuator;
+  this.actuator = new Actuator;
 
-  this.startTiles     = 2;
+  this.startTiles = 2;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -15,8 +15,32 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
 // Restart the game
 GameManager.prototype.restart = function () {
+  // ask for a custom limit; blank/cancel = no limit (time‑trial)
+  var answer = window.prompt(
+    "Enter a time limit in seconds (leave blank for no limit):",
+    "120"          // default two minutes
+  );
+
+  if (answer === null) {
+    // user hit “Cancel”
+    this.timeLimit = null;
+  } else {
+    answer = answer.trim();
+    if (answer === "") {
+      this.timeLimit = null;
+    } else {
+      var secs = parseInt(answer, 10);
+      if (isNaN(secs) || secs <= 0) {
+        // invalid entry, fall back to no limit
+        this.timeLimit = null;
+      } else {
+        this.timeLimit = secs;
+      }
+    }
+  }
+
   this.storageManager.clearGameState();
-  this.actuator.continueGame(); // Clear the game won/lost message
+  this.actuator.continueGame(); // clear any win/lose message
   this.setup();
 };
 
@@ -35,31 +59,35 @@ GameManager.prototype.isGameTerminated = function () {
 GameManager.prototype.setup = function () {
   var previousState = this.storageManager.getGameState();
 
-  // Reload the game from a previous game if present
   if (previousState) {
-    this.grid        = new Grid(previousState.grid.size,
-                                previousState.grid.cells); // Reload grid
-    this.score       = previousState.score;
-    this.over        = previousState.over;
-    this.won         = previousState.won;
+    this.grid = new Grid(previousState.grid.size,
+                         previousState.grid.cells);
+    this.score = previousState.score;
+    this.over  = previousState.over;
+    this.won   = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
-    this.startTime  = Date.now() - (previousState.elapsedTime * 1000);
+    this.startTime   = Date.now() - (previousState.elapsedTime * 1000);
+    this.timeLimit   = previousState.timeLimit;
   } else {
-    this.grid        = new Grid(this.size);
-    this.score       = 0;
-    this.over        = false;
-    this.won         = false;
+    this.grid = new Grid(this.size);
+    this.score = 0;
+    this.over  = false;
+    this.won   = false;
     this.keepPlaying = false;
-    this.startTime   = Date.now();
+    this.startTime = Date.now();
 
-    // Add the initial tiles
+    // only assign a default if restart() hasn't already set one
+    if (typeof this.timeLimit === "undefined") {
+      this.timeLimit = 120; // two‑minute default
+    }
+
     this.addStartTiles();
   }
 
   if (this.timerInterval) {
     clearInterval(this.timerInterval);
   }
-  
+
   var self = this;
   this.timerInterval = setInterval(function () {
     self.updateTimerDisplay();
@@ -74,7 +102,15 @@ GameManager.prototype.getElapsedTime = function () {
 };
 
 GameManager.prototype.updateTimerDisplay = function () {
-  this.actuator.updateTimer(this.getElapsedTime());
+  if (this.timeLimit != null) {
+    this.actuator.updateTimer(this.timeLimit - this.getElapsedTime());
+    if (this.getElapsedTime() >= this.timeLimit) {
+      this.over = true;
+      this.actuate();
+    }
+  } else {
+    this.actuator.updateTimer(this.getElapsedTime());
+  }
 };
 
 // Set up the initial tiles to start the game with
@@ -108,10 +144,10 @@ GameManager.prototype.actuate = function () {
   }
 
   this.actuator.actuate(this.grid, {
-    score:      this.score,
-    over:       this.over,
-    won:        this.won,
-    bestScore:  this.storageManager.getBestScore(),
+    score: this.score,
+    over: this.over,
+    won: this.won,
+    bestScore: this.storageManager.getBestScore(),
     terminated: this.isGameTerminated(),
     elapsedTime: this.getElapsedTime()
   });
@@ -121,12 +157,13 @@ GameManager.prototype.actuate = function () {
 // Represent the current game as an object
 GameManager.prototype.serialize = function () {
   return {
-    grid:        this.grid.serialize(),
-    score:       this.score,
-    over:        this.over,
-    won:         this.won,
+    grid: this.grid.serialize(),
+    score: this.score,
+    over: this.over,
+    won: this.won,
     keepPlaying: this.keepPlaying,
-    elapsedTime: this.getElapsedTime()
+    elapsedTime: this.getElapsedTime(),
+    timeLimit: this.timeLimit
   };
 };
 
@@ -156,9 +193,9 @@ GameManager.prototype.move = function (direction) {
 
   var cell, tile;
 
-  var vector     = this.getVector(direction);
+  var vector = this.getVector(direction);
   var traversals = this.buildTraversals(vector);
-  var moved      = false;
+  var moved = false;
 
   // Save the current tile positions and remove merger information
   this.prepareTiles();
@@ -171,7 +208,7 @@ GameManager.prototype.move = function (direction) {
 
       if (tile) {
         var positions = self.findFarthestPosition(cell, vector);
-        var next      = self.grid.cellContent(positions.next);
+        var next = self.grid.cellContent(positions.next);
 
         // Only one merger per row traversal?
         if (next && next.value === tile.value && !next.mergedFrom) {
@@ -215,9 +252,9 @@ GameManager.prototype.move = function (direction) {
 GameManager.prototype.getVector = function (direction) {
   // Vectors representing tile movement
   var map = {
-    0: { x: 0,  y: -1 }, // Up
-    1: { x: 1,  y: 0 },  // Right
-    2: { x: 0,  y: 1 },  // Down
+    0: { x: 0, y: -1 }, // Up
+    1: { x: 1, y: 0 },  // Right
+    2: { x: 0, y: 1 },  // Down
     3: { x: -1, y: 0 }   // Left
   };
 
@@ -246,9 +283,9 @@ GameManager.prototype.findFarthestPosition = function (cell, vector) {
   // Progress towards the vector direction until an obstacle is found
   do {
     previous = cell;
-    cell     = { x: previous.x + vector.x, y: previous.y + vector.y };
+    cell = { x: previous.x + vector.x, y: previous.y + vector.y };
   } while (this.grid.withinBounds(cell) &&
-           this.grid.cellAvailable(cell));
+    this.grid.cellAvailable(cell));
 
   return {
     farthest: previous,
@@ -273,9 +310,9 @@ GameManager.prototype.tileMatchesAvailable = function () {
       if (tile) {
         for (var direction = 0; direction < 4; direction++) {
           var vector = self.getVector(direction);
-          var cell   = { x: x + vector.x, y: y + vector.y };
+          var cell = { x: x + vector.x, y: y + vector.y };
 
-          var other  = self.grid.cellContent(cell);
+          var other = self.grid.cellContent(cell);
 
           if (other && other.value === tile.value) {
             return true; // These two tiles can be merged

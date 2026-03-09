@@ -394,6 +394,30 @@ hr {
       .tile.tile-super .tile-inner {
         font-size: 10px; } }
 
+/* timer formatting */
+.timer-container {
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 15px;
+    background: #bbada0;           /* same colour as the score boxes */
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #f9f6f2;
+    text-align: center;
+    font-weight: bold;
+}
+
+.timer-container .timer-label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.timer-container .timer-value {
+    font-size: 1.25em;
+    line-height: 1;
+}
+
 @-webkit-keyframes appear {
   0% {
     opacity: 0;
