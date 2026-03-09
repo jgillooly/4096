@@ -68,33 +68,19 @@ KeyboardInputManager.prototype.listen = function () {
     }
   });
 
-  // Respond to button presses (use local helper to avoid rely on prototype definition)
-  var bindPress = function(selector, fn) {
-    var btn = document.querySelector(selector);
-    if (!btn) return;
-    btn.addEventListener("click", fn.bind(self));
-    if (self.eventTouchend) {
-      btn.addEventListener(self.eventTouchend, fn.bind(self));
-    }
-  };
-
-  bindPress(".retry-button", this.restart);
-  bindPress(".restart-button", this.restart);
-  bindPress(".keep-playing-button", this.keepPlaying);
-  // bindPress(".easy-mode-button", this.easyMode);
-  // bindPress(".hard-mode-button", this.hardMode);
-  // also bind possible ID-based buttons (used on before-game.html)
-  bindPress("#easy-mode-button", this.easyMode);
-  bindPress("#hard-mode-button", this.hardMode);
+  // Respond to button presses
+  this.bindButtonPress(".retry-button", this.restart);
+  this.bindButtonPress(".restart-button", this.restart);
+  this.bindButtonPress(".keep-playing-button", this.keepPlaying);
 
   // Respond to swipe events
   var touchStartClientX, touchStartClientY;
   var gameContainer = document.getElementsByClassName("game-container")[0];
-  if (gameContainer) {
-    gameContainer.addEventListener(this.eventTouchstart, function (event) {
+
+  gameContainer.addEventListener(this.eventTouchstart, function (event) {
     if ((!window.navigator.msPointerEnabled && event.touches.length > 1) ||
         event.targetTouches.length > 1) {
-     return; // Ignore if touching with more than 1 finger
+      return; // Ignore if touching with more than 1 finger
     }
 
     if (window.navigator.msPointerEnabled) {
@@ -151,22 +137,8 @@ KeyboardInputManager.prototype.keepPlaying = function (event) {
   this.emit("keepPlaying");
 };
 
-// back-compat helper; not required for current behaviour
 KeyboardInputManager.prototype.bindButtonPress = function (selector, fn) {
   var button = document.querySelector(selector);
-  if (!button) return;
   button.addEventListener("click", fn.bind(this));
   button.addEventListener(this.eventTouchend, fn.bind(this));
 };
-
-// simple emitters triggered by the buttons
-KeyboardInputManager.prototype.easyMode = function (event, easyMode) {
-  if (event && event.preventDefault) event.preventDefault();
-  this.emit("easyMode", easyMode);
-};
-
-KeyboardInputManager.prototype.hardMode = function (event, hardMode) {
-  if (event && event.preventDefault) event.preventDefault();
-  this.emit("hardMode", hardMode);
- };
-}
