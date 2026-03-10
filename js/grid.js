@@ -130,3 +130,11 @@ Grid.prototype.hardMode = function () {
   this.grid = new Grid(this.size = 5);
   this.addStartTiles();
 };
+
+Grid.prototype.normalMode = function () {
+  this.actuator.continueGame();
+  this.setup();
+  this.size = 4;
+  this.grid = new Grid(this.size = 4);
+  this.addStartTiles();
+};

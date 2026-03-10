@@ -5,7 +5,7 @@
   <title>2048</title>
 
   <link href="style/main.css" rel="stylesheet" type="text/css">
-  <a href="/before-game.html"></a>
+  <a href="./before-game.html">Choose Mode</a>
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="meta/apple-touch-icon.png">
   <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x1096.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone 5+ -->
@@ -60,7 +60,6 @@
     <p>
     Created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli.</a> Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer.</a>
     </p>
-  </div>
 
   <script src="js/bind_polyfill.js"></script>
   <script src="js/classlist_polyfill.js"></script>
@@ -85,6 +84,8 @@
           size = 3;
         } else if (params.mode === 'hard') {
           size = 5;
+        }else if (params.mode === 'normal') {
+          size = 4;
         }
       } else {
         // fall back to localStorage (set by before-game click handler)
@@ -118,10 +119,25 @@
         var totalPadding = 30; // 15px each side
         var margin = 15; // margin-right on each cell except last
         var cellSide = (500 - totalPadding - (size - 1) * margin) / size;
+        var step = cellSide + margin; // distance between top/left of adjacent cells
         var style = document.createElement('style');
-        style.textContent =
-          '.grid-cell { width: ' + cellSide + 'px; height: ' + cellSide + 'px; }' +
-          '.tile, .tile .tile-inner { width: ' + (cellSide + 1) + 'px; height: ' + (cellSide + 1) + 'px; line-height: ' + (cellSide + 1) + 'px; }';
+        var css = '';
+        css += '.grid-cell { width: ' + cellSide + 'px; height: ' + cellSide + 'px; }';
+        css += '.tile, .tile .tile-inner { width: ' + (cellSide + 1) + 'px; height: ' + (cellSide + 1) + 'px; line-height: ' + (cellSide + 1) + 'px; }';
+
+        // generate position rules for current grid size
+        for (var ix = 1; ix <= size; ix++) {
+          for (var jy = 1; jy <= size; jy++) {
+            var xdist = (ix - 1) * step;
+            var ydist = (jy - 1) * step;
+            css += '.tile.tile-position-' + ix + '-' + jy + ' { ' +
+                   '-webkit-transform: translate(' + xdist + 'px, ' + ydist + 'px); ' +
+                   '-moz-transform: translate(' + xdist + 'px, ' + ydist + 'px); ' +
+                   '-ms-transform: translate(' + xdist + 'px, ' + ydist + 'px); ' +
+                   'transform: translate(' + xdist + 'px, ' + ydist + 'px); }';
+          }
+        }
+        style.textContent = css;
         document.head.appendChild(style);
       }
     })();

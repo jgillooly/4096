@@ -20,6 +20,7 @@
     <div class="before-game">
      <p>Which Mode Would You Like to Play?</p> 
      <button id="easy-mode-button">Easy Mode</button>
+     <button id="normal-mode-button">Normal Mode</button>
      <button id="hard-mode-button">Hard Mode</button>
   </div>
 
@@ -30,6 +31,7 @@
       window.location = 'index.html';
     }
     document.getElementById('easy-mode-button').addEventListener('click', function(){ choose('easy'); });
+    document.getElementById('normal-mode-button').addEventListener('click', function(){ choose('normal'); });
     document.getElementById('hard-mode-button').addEventListener('click', function(){ choose('hard'); });
   </script>
 

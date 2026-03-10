@@ -23,6 +23,8 @@ KeyboardInputManager.prototype.on = function (event, callback) {
 };
 
 KeyboardInputManager.prototype.emit = function (event, data) {
+  // debug log input events
+  console.log('InputManager.emit', event, data);
   var callbacks = this.events[event];
   if (callbacks) {
     callbacks.forEach(function (callback) {
@@ -70,6 +72,7 @@ KeyboardInputManager.prototype.listen = function () {
 
   // Respond to button presses (use local helper to avoid rely on prototype definition)
   var bindPress = function(selector, fn) {
+    if (!fn) return; // Guard: skip if function doesn't exist
     var btn = document.querySelector(selector);
     if (!btn) return;
     btn.addEventListener("click", fn.bind(self));
@@ -84,6 +87,7 @@ KeyboardInputManager.prototype.listen = function () {
   // bindPress(".easy-mode-button", this.easyMode);
   // bindPress(".hard-mode-button", this.hardMode);
   // also bind possible ID-based buttons (used on before-game.html)
+  bindPress("#normal-mode-button", this.normalMode);
   bindPress("#easy-mode-button", this.easyMode);
   bindPress("#hard-mode-button", this.hardMode);
 
@@ -168,5 +172,10 @@ KeyboardInputManager.prototype.easyMode = function (event, easyMode) {
 KeyboardInputManager.prototype.hardMode = function (event, hardMode) {
   if (event && event.preventDefault) event.preventDefault();
   this.emit("hardMode", hardMode);
+ };
+
+KeyboardInputManager.prototype.normalMode = function (event, normalMode) {
+  if (event && event.preventDefault) event.preventDefault();
+  this.emit("normalMode", normalMode);
  };
 }
