@@ -9,6 +9,9 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+  this.inputManager.on("normalMode", this.normalMode.bind(this));
+  this.inputManager.on("easyMode", this.easyMode.bind(this));
+  this.inputManager.on("hardMode", this.hardMode.bind(this));
 
   this.setup();
 }
@@ -43,6 +46,24 @@ GameManager.prototype.restart = function () {
   this.actuator.continueGame(); // clear any win/lose message
   this.setup();
 };
+GameManager.prototype.easyMode = function () {
+  this.storageManager.clearGameState();
+  this.size = 3;
+  this.actuator.continueGame();
+  this.setup();
+};
+GameManager.prototype.hardMode = function () {
+  this.storageManager.clearGameState();
+  this.size = 5;
+  this.actuator.continueGame();
+  this.setup();
+};
+GameManager.prototype.normalMode = function () {
+  this.storageManager.clearGameState();
+  this.size = 4;
+  this.actuator.continueGame();
+  this.setup();
+};
 
 // Keep playing after winning (allows going over 2048)
 GameManager.prototype.keepPlaying = function () {
@@ -58,6 +79,14 @@ GameManager.prototype.isGameTerminated = function () {
 // Set up the game
 GameManager.prototype.setup = function () {
   var previousState = this.storageManager.getGameState();
+  console.log('GameManager.setup size=' + this.size + ' previousState=', previousState);
+
+  // if a saved state exists but the grid size changed, ignore it
+  if (previousState && previousState.grid && previousState.grid.size !== this.size) {
+    console.log('Discarding saved state because size mismatch', previousState.grid.size, this.size);
+    previousState = null;
+    this.storageManager.clearGameState();
+  }
 
   if (previousState) {
     this.grid = new Grid(previousState.grid.size,
@@ -82,6 +111,7 @@ GameManager.prototype.setup = function () {
     }
 
     this.addStartTiles();
+    console.log('Initial grid after adding tiles:', this.grid.cells);
   }
 
   if (this.timerInterval) {
